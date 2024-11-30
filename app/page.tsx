@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { signIn, signOut, useSession } from "next-auth/react";
+import styles from "./page.module.css";
 
 type ToDo = {
   id: number;
@@ -10,7 +11,7 @@ type ToDo = {
 };
 
 export default function HomePage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [todos, setTodos] = useState<ToDo[]>([]);
   const [newTodo, setNewTodo] = useState<string>("");
 
@@ -18,7 +19,7 @@ export default function HomePage() {
     if (status === "authenticated") {
       fetch("/api/todo")
         .then((res) => res.json())
-        .then(setTodos)
+        .then((obj) => { console.log(obj); setTodos(obj); })
         .catch((err) => console.error(err));
     }
   }, [status]);
@@ -45,10 +46,11 @@ export default function HomePage() {
     const res = await fetch("/api/todo", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, completed }),
+      body: JSON.stringify({ id, completed: !completed }),
     });
 
     if (res.ok) {
+      // console.log(await res.json());
       setTodos(
         todos.map((todo) =>
           todo.id === id ? { ...todo, completed: !completed } : todo
@@ -77,35 +79,51 @@ export default function HomePage() {
 
   if (status === "unauthenticated") {
     return (
-      <div>
-        <h1>Welcome to ToDo App</h1>
-        <button type="button" onClick={() => signIn()}>Sign In</button>
+      <div className={styles.todoApp}>
+        <h1 className={styles.title}>Welcome to ToDo App</h1>
+        <button type="button" className={`${styles.button} ${styles.signOut}`} onClick={() => signIn()}>
+          Sign In
+        </button>
       </div>
     );
   }
 
   return (
-    <div>
-      <h1>ToDo App</h1>
-      <button type="button" onClick={() => signOut()}>Sign Out</button>
-      <div>
+    <div className={styles.todoApp}>
+      <h1 className={styles.title}>ToDo App</h1>
+      <div className={styles.signOutContainer}>
+        <button type="button" className={`${styles.button} ${styles.signOut}`} onClick={() => signOut()}>
+          Sign Out
+        </button>
+      </div>
+      <div className={styles.todoInput}>
         <input
           value={newTodo}
           onChange={(e) => setNewTodo(e.target.value)}
           placeholder="Add a new task"
         />
-        <button type="button" onClick={addTodo}>Add</button>
+        <button type="button" className={`${styles.button} ${styles.addButton}`} onClick={addTodo}>
+          Add
+        </button>
       </div>
-      <ul>
+      <ul className={styles.todoList}>
         {todos.map((todo) => (
-          <li key={todo.id}>
+          <li
+            key={todo.id}
+            className={`${styles.todoItem} ${todo.completed ? styles.completed : ""}`}
+          >
             <input
               type="checkbox"
               checked={todo.completed}
               onChange={() => toggleTodo(todo.id, todo.completed)}
             />
-            {todo.title}
-            <button type="button" onClick={() => deleteTodo(todo.id)}>Delete</button>
+            <span>{todo.title}</span>
+            <button type="button"
+              className={`${styles.button} ${styles.deleteButton}`}
+              onClick={() => deleteTodo(todo.id)}
+            >
+              Delete
+            </button>
           </li>
         ))}
       </ul>

@@ -44,6 +44,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   const { id, completed } = await req.json();
+  console.log(id, completed);
   const updatedTodo = await prisma.toDo.update({
     where: { id },
     data: { completed },
@@ -63,6 +64,6 @@ export async function DELETE(req: NextRequest) {
   await prisma.toDo.delete({
     where: { id },
   });
-
-  return NextResponse.json({}, { status: 204 });
+  // 204 No Contentなので、レスポンスボディは空
+  return new NextResponse(null, { status: 204 });
 }
